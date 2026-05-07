@@ -375,19 +375,60 @@ private handlePointerDown(clientX: number, clientY: number) {
         }
 
         if (this.isCharging || (this.currentLog && this.currentLog.state !== LogState.InPosition)) {
-            const mX = 680, mY = 120, mW = 35, mH = 250;
+            const mX = 680, mY = 120, mW = 25, mH = 250;
+            const radius = 5;
 
-            this.ctx.fillStyle = "#1e1f22";
-            this.ctx.fillRect(mX, mY, mW, mH);
+            this.ctx.fillStyle = "rgba(30, 31, 34, 0.8)";
+            this.ctx.beginPath();
+            this.ctx.roundRect(mX, mY, mW, mH, radius);
+            this.ctx.fill();
+            this.ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+            this.ctx.stroke();
 
             const perfY = mY + mH - (config.perfectMax / 100 * mH);
             const perfH = (config.perfectMax - config.perfectMin) / 100 * mH;
-            this.ctx.fillStyle = "#2ecc71";
-            this.ctx.fillRect(mX, perfY, mW, perfH);
+
+            const perfGrad = this.ctx.createLinearGradient(mX, perfY, mX + mW, perfY);
+            perfGrad.addColorStop(0, "#2ecc71");
+            perfGrad.addColorStop(1, "#27ae60");
+
+            this.ctx.fillStyle = perfGrad;
+            this.ctx.shadowBlur = 10;
+            this.ctx.shadowColor = "#2ecc71";
+            this.ctx.fillRect(mX - 2, perfY, mW + 4, perfH);
+            this.ctx.shadowBlur = 0;
 
             const chargeH = (this.power / 100) * mH;
-            this.ctx.fillStyle = "#e74c3c";
-            this.ctx.fillRect(mX + 4, mY + mH - chargeH, mW - 8, chargeH);
+            const powerY = mY + mH - chargeH;
+
+            const isInsidePerfect = this.power >= config.perfectMin && this.power <= config.perfectMax;
+
+            const powerGrad = this.ctx.createLinearGradient(mX, powerY, mX, mY + mH);
+
+            if (isInsidePerfect) {
+            powerGrad.addColorStop(0, "#ffffff");
+            powerGrad.addColorStop(1, "#f1c40f");
+            this.ctx.shadowBlur = 15;
+            this.ctx.shadowColor = "#f1c40f";
+        } else {
+            powerGrad.addColorStop(0, "#e74c3c");
+            powerGrad.addColorStop(1, "#c0392b");
+            this.ctx.shadowBlur = 0;
+        }
+            
+            this.ctx.fillStyle = powerGrad;
+            this.ctx.beginPath();
+            this.ctx.roundRect(mX + 4, powerY, mW - 8, chargeH, [0, 0, radius, radius]);
+            this.ctx.fill();
+
+            if (this.isCharging) {
+                this.ctx.strokeStyle = "white";
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                this.ctx.moveTo(mX + 2, powerY);
+                this.ctx.lineTo(mX + mW - 2, powerY);
+                this.ctx.stroke();
+            }
         }
 
         this.ctx.save();
